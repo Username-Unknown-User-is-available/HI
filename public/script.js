@@ -7,26 +7,48 @@ var peer = new Peer(undefined, {
 });
 
 const user = prompt("Enter your name");
-const myvideo = document.createElement("video")
-myvideo.muted=true
 
-var mystream
-navigator.mediaDevices.getUserMedia({
-    audio:true,
-    video:true,
-}).then((stream) => {
-    mystream = stream
+const myVideo = document.createElement("video");
+myVideo.muted = true;
 
-    addVideoStream(myvideo, stream)
-})
+let myStream;
 
-function addVideoStream(video, stream){
-    video.srcObject = stream
-    video.addEventListener("loadedmetadata", () => {
-        video.play()
-        $("#video_grid").append(video)
+navigator.mediaDevices
+    .getUserMedia({
+        audio: true,
+        video: true,
+    })
+    .then((stream) => {
+        myStream = stream;
+        addVideoStream(myVideo, stream);
+        socket.on("user-conected", (userId) => {
+            connectToNewUser(userId, stream)
+        })
+        peer.on("call", (call) => {
+            call.answer(stream)
+            const video = document.createElement("video")
+            call.on("stream", (userVideoStream) => {
+                addVideoStream(video, userVideoStream)
+            })
+        })
+    })
+
+function connectToNewUser(userId, stream) {
+    const call = peer.call(userId, stream)
+    const video = document.createElement("video")
+
+    call.on("stream", (userVideoStream) => {
+        addVideoStream(video, userVideoStream)
     })
 }
+
+function addVideoStream(video, stream) {
+    video.srcObject = stream;
+    video.addEventListener("loadedmetadata", () => {
+        video.play();
+        $("#video_grid").append(video)
+    });
+};
 
 $(function () {
     $("#show_chat").click(function () {
@@ -51,6 +73,36 @@ $(function () {
         if (e.key == "Enter" && $("#chat_message").val().length !== 0) {
             socket.emit("message", $("#chat_message").val());
             $("#chat_message").val("");
+        }
+    })
+
+    $("#mute_button").click(function (anuthing) {
+        const enabled = myStream.getAudioTracks()[0].enabled
+        if (enabled) {
+            myStream.getAudioTracks()[0].enabled = false
+            html = `<i class="fas fa-microphone-slash"></i>`
+            $("#mute_button").toggelclass("background_red")
+            $("#mute_button").html(html)
+        } else {
+            myStream.getAudioTracks()[0].enabled = true
+            html = `<i class="fas fa-microphone"></i>`
+            $("#mute_button").toggelclass("background_red")
+            $("#mute_button").html(html)
+        }
+    })
+
+    $("#stop_video").click(function (anuthing) {
+        const enabled = myStream.getVideoTracks()[0].enabled
+        if (enabled) {
+            myStream.getVideoTracks()[0].enabled = false
+            html = `<i class="fas fa-video-slash"></i>`
+            $("#stop_video").toggelclass("background_red")
+            $("#stop_video").html(html)
+        } else {
+            myStream.getVideoTracks()[0].enabled = true
+            html = `<i class="fas fa-video"></i>`
+            $("#stop_video").toggelclass("background_red")
+            $("#stop_video").html(html)
         }
     })
 
