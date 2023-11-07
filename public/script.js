@@ -21,26 +21,27 @@ navigator.mediaDevices
     .then((stream) => {
         myStream = stream;
         addVideoStream(myVideo, stream);
-        socket.on("user-conected", (userId) => {
-            connectToNewUser(userId, stream)
-        })
+
+        socket.on("user-connected", (userId) => {
+            connectToNewUser(userId, stream);
+        });
+
         peer.on("call", (call) => {
-            call.answer(stream)
-            const video = document.createElement("video")
+            call.answer(stream);
+            const video = document.createElement("video");
             call.on("stream", (userVideoStream) => {
-                addVideoStream(video, userVideoStream)
-            })
-        })
+                addVideoStream(video, userVideoStream);
+            });
+        });
     })
 
 function connectToNewUser(userId, stream) {
-    const call = peer.call(userId, stream)
-    const video = document.createElement("video")
-
+    const call = peer.call(userId, stream);
+    const video = document.createElement("video");
     call.on("stream", (userVideoStream) => {
-        addVideoStream(video, userVideoStream)
-    })
-}
+        addVideoStream(video, userVideoStream);
+    });
+};
 
 function addVideoStream(video, stream) {
     video.srcObject = stream;
@@ -76,34 +77,56 @@ $(function () {
         }
     })
 
-    $("#mute_button").click(function (anuthing) {
-        const enabled = myStream.getAudioTracks()[0].enabled
+    $("#mute_button").click(function () {
+        const enabled = myStream.getAudioTracks()[0].enabled;
         if (enabled) {
-            myStream.getAudioTracks()[0].enabled = false
-            html = `<i class="fas fa-microphone-slash"></i>`
-            $("#mute_button").toggelclass("background_red")
+            myStream.getAudioTracks()[0].enabled = false;
+            html = `<i class="fas fa-microphone-slash"></i>`;
+            $("#mute_button").toggleClass("background_red");
             $("#mute_button").html(html)
         } else {
-            myStream.getAudioTracks()[0].enabled = true
-            html = `<i class="fas fa-microphone"></i>`
-            $("#mute_button").toggelclass("background_red")
+            myStream.getAudioTracks()[0].enabled = true;
+            html = `<i class="fas fa-microphone"></i>`;
+            $("#mute_button").toggleClass("background_red");
             $("#mute_button").html(html)
         }
     })
 
-    $("#stop_video").click(function (anuthing) {
-        const enabled = myStream.getVideoTracks()[0].enabled
+    $("#stop_video").click(function () {
+        const enabled = myStream.getVideoTracks()[0].enabled;
         if (enabled) {
-            myStream.getVideoTracks()[0].enabled = false
-            html = `<i class="fas fa-video-slash"></i>`
-            $("#stop_video").toggelclass("background_red")
+            myStream.getVideoTracks()[0].enabled = false;
+            html = `<i class="fas fa-video-slash"></i>`;
+            $("#stop_video").toggleClass("background_red");
             $("#stop_video").html(html)
         } else {
-            myStream.getVideoTracks()[0].enabled = true
-            html = `<i class="fas fa-video"></i>`
-            $("#stop_video").toggelclass("background_red")
+            myStream.getVideoTracks()[0].enabled = true;
+            html = `<i class="fas fa-video"></i>`;
+            $("#stop_video").toggleClass("background_red");
             $("#stop_video").html(html)
         }
+    })
+
+    $("#invite_button").click(function () {
+        const to = prompt("Enter your email address, NOW!")
+        var data = {
+            url: window.location.href,
+            to: to
+
+        }
+        $.ajax({
+            url: "/send-mail",
+            type: "post",
+            data: JSON.stringify(data),
+            dataType: "json",
+            contentType: "application/json",
+            sucess: function (anything) {
+                alert("invitE senT")
+            },
+            error: function (anythingalso) {
+                console.log(anythingalso.responseJSON)
+            }
+        })
     })
 
 })
